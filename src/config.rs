@@ -1,0 +1,1 @@
+pub const MADENGWO_URL: &'static str = "https://madengwo.com";
