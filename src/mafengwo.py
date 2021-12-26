@@ -1,6 +1,10 @@
+import csv
+import os.path
+import re
+
+import execjs
 import requests
 from bs4 import BeautifulSoup, Tag
-import csv
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
@@ -13,22 +17,131 @@ def get_viewer_number(plain: str):
     return plain.strip().replace("浏览", "")
 
 
-def get_info_from_child(child):
-    title = child.h3.a.text
+def get_info_from_child(child: any) -> tuple:
+    title = child.h3.a.text.strip().replace("\n", "")
     note_url = child.h3.a['href']
     viewer = get_viewer_number(child.ul.li.text)
     return title, note_url, viewer
 
 
-if __name__ == "__main__":
+def get_all_notes(url: str) -> tuple:
     r = requests.get(url, headers=headers)
     html = r.text
     soup = BeautifulSoup(html, 'lxml')
     result = soup.find('div', class_='att-list').find('ul')
     childs = [child.find('div', class_="ct-text") for child in result.children if isinstance(child, Tag)]
-    result = map(get_info_from_child, childs)
+    return map(get_info_from_child, childs)
 
-    with open("mafengwo.csv", 'w', encoding='utf-8') as f:
-        csv_writer = csv.writer(f)
-        csv_writer.writerow(['标题', '链接', '浏览量'])
-        csv_writer.writerows(result)
+
+def get_clearance(text: str):
+    soup = BeautifulSoup(text, 'lxml')
+    script = soup.find('script').text
+    js_clearance = re.match(r"document.cookie=(.*);", script).group(1)
+    clearance = execjs.eval(js_clearance)
+    cookies = dict([l.split("=") for l in clearance.split(";")])
+    return cookies
+
+
+def get_html_from_note(note_url: str) -> tuple:
+    s = requests.session()
+    header = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
+        'Referer': note_url,
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+        "Cookie": '__jsluid_h=f8928711fac62217c555464ad855d214; PHPSESSID=idd2huh8c2c0u1qi1dv87da0r2; mfw_uuid=61c667c5-334e-3654-c47c-2cccda783168; oad_n=a%3A3%3A%7Bs%3A3%3A%22oid%22%3Bi%3A1029%3Bs%3A2%3A%22dm%22%3Bs%3A15%3A%22www.mafengwo.cn%22%3Bs%3A2%3A%22ft%22%3Bs%3A19%3A%222021-12-25+08%3A37%3A25%22%3B%7D; __mfwc=direct; __mfwlv=1640392646; __mfwvn=1; bottom_ad_status=1; Hm_lvt_8288b2ed37e5bc9b4c9f7008798d2de0=1640346747; uva=s%3A106%3A%22a%3A3%3A%7Bs%3A2%3A%22lt%22%3Bi%3A1640392646%3Bs%3A10%3A%22last_refer%22%3Bs%3A38%3A%22http%3A%2F%2Fwww.mafengwo.cn%2Fi%2F22509373.html%22%3Bs%3A5%3A%22rhost%22%3BN%3B%7D%22%3B; __mfwurd=a%3A3%3A%7Bs%3A6%3A%22f_time%22%3Bi%3A1640392646%3Bs%3A9%3A%22f_rdomain%22%3Bs%3A15%3A%22www.mafengwo.cn%22%3Bs%3A6%3A%22f_host%22%3Bs%3A3%3A%22www%22%3B%7D; __mfwuuid=61c667c5-334e-3654-c47c-2cccda783168; UM_distinctid=17def056479ceb-047af1cb76e00a-796f244e-1ea000-17def05647aa3e; __jsl_clearance=1640396329.09|0|%2F9Zcg9Oe2JWwKAidqSCkIQdW1so%3D; __mfwb=95c6c65edd09.1.direct; __mfwa=1640392646773.92992.2.1640392646773.1640396331660; __mfwlt=1640396331; Hm_lpvt_8288b2ed37e5bc9b4c9f7008798d2de0=1640396332; CNZZDATA30065558=cnzz_eid%3D235280131-1640382872-http%253A%252F%252Fwww.mafengwo.cn%252F%26ntime%3D1640393675'
+    }
+    s.headers.update(header)
+    # first
+    r = s.get(note_url)
+    if r.status_code == 521:
+        raise Exception("访问被拒绝 No Cookie")
+        clearance = get_clearance(r.text)
+        s.cookies.update(requests.utils.cookiejar_from_dict(clearance))
+        # second
+        r = s.get(note_url)
+        print(r.status_code)
+    html = r.text
+    save_html_to_folder(note_url, html)
+    return html
+
+
+def save_html_to_folder(note_url: str, html: str):
+    folder_prefix = "../html/mafengwo"
+    if not os.path.exists(folder_prefix):
+        os.makedirs(folder_prefix)
+    with open(folder_prefix + "/" + get_number_from_url(note_url) + ".html", 'w') as fp:
+        fp.write(html)
+
+
+def get_number_from_url(url: str) -> str:
+    return re.match(r".*/i/(\d+)", url).group(1)
+
+
+def handle(title, url, viewer):
+    print("开始处理 {}, {}".format(title, url))
+    number = get_number_from_url(url)
+    print("睡眠3秒...")
+    html = get_html_from_note(url)
+    print("页面下载结束")
+    save_html_to_folder(url, html)
+    print("处理结束 {}, {}".format(title, url))
+    return number, title, url, viewer
+
+
+def save_to_csv(note_info: tuple):
+    folder_prefix = "../csv/mafengwo"
+    if not os.path.exists(folder_prefix):
+        os.makedirs(folder_prefix)
+
+    with open(folder_prefix + "/mafengwo.csv", 'w') as fp:
+        note_info = [handle(title, url, viewer) for (title, url, viewer) in note_info]
+        csv_writer = csv.writer(fp)
+        csv_writer.writerow(["序号", '标题', "链接", "浏览量"])
+        csv_writer.writerows(note_info)
+
+
+def parse_note(html: str) -> tuple:
+    def is_seq(css_class: str):
+        seq_class = "_j_seqitem"
+        return seq_class in css_class
+
+    soup = BeautifulSoup(html, 'lxml')
+    article = soup.find("div", attrs={"class": "vc_article"})
+    seq_title = soup.find_all("div", class_="article_title _j_anchorcnt _j_seqitem")
+    titles = [i.text.strip() for i in seq_title]
+    seq_img = soup.find_all("div", class_="add_pic _j_anchorcnt _j_seqitem")
+    imgs = [i.a.img["data-src"] for i in seq_img]
+    seq_p = article.find_all("p", class_=is_seq)
+    ps = [i.text.strip().replace(" ", "").replace("\n", "") for i in seq_p]
+    return ''.join(titles), ''.join(ps), '\n'.join(imgs)
+
+
+def is_title(css_class: str):
+    return "article_title" in css_class
+
+
+def is_img(css_class: str):
+    return "add_pic" in css_class
+
+
+def get_parse_from_number(number: int) -> tuple:
+    with open("../html/mafengwo/" + number + ".html", 'r') as file:
+        return parse_note(file.read())
+
+
+if __name__ == "__main__":
+    file_name = "22509373.html"
+    records = []
+    with open('../csv/mafengwo/mafengwo.csv', 'r') as file:
+        with open('../csv/mafengwo/final_mafengwo.csv', 'w') as final_file:
+            csv_reader = csv.DictReader(file)
+            fieldnames = ['编号', '标题', '链接', '浏览量', '小标题', '正文', '图片']
+            csv_writer = csv.writer(final_file)
+            csv_writer.writerow(fieldnames)
+            for row in csv_reader:
+                number = row['number']
+                title = row['title']
+                url = row['url']
+                viewer = row['viewer']
+                titles, ps, imgs = get_parse_from_number(number)
+                csv_writer.writerow([number, title, url, viewer, titles, ps, imgs])
