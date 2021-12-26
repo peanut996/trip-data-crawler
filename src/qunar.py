@@ -2,7 +2,7 @@ from selenium import webdriver
 from bs4 import BeautifulSoup
 import lxml
 
-QUNAR_URL = 'http://travel.qunar.com/travelbook/list/22-shanghai-299878/hot_ctime/1.htm '
+QUNAR_URL = 'http://travel.qunar.com/travelbook/list/22-shanghai-299878/hot_ctime/1.htm'
 
 
 if __name__ == '__main__':
