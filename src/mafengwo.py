@@ -1,10 +1,14 @@
 import csv
 import os.path
 import re
-
+from selenium import webdriver
+from selenium.webdriver import ActionChains
+from selenium.webdriver.common.keys import Keys
 import execjs
 import requests
 from bs4 import BeautifulSoup, Tag
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
@@ -129,19 +133,42 @@ def get_parse_from_number(number: int) -> tuple:
         return parse_note(file.read())
 
 
+def seleium_to_get_html(url):
+    driver = webdriver.Edge()
+    driver.get(url)
+    for i in range(10):
+        driver.execute_script('window.scrollTo(0, document.body.scrollHeight)')
+        ActionChains(driver).key_down(Keys.DOWN).perform()
+        time.sleep(5)
+    html = driver.page_source
+    parse_note(html)
+    save_html_to_folder(url, html)
+    driver.close()
+    return get_number_from_url(url)
+
+
 if __name__ == "__main__":
-    file_name = "22509373.html"
-    records = []
-    with open('../csv/mafengwo/mafengwo.csv', 'r') as file:
-        with open('../csv/mafengwo/final_mafengwo.csv', 'w') as final_file:
-            csv_reader = csv.DictReader(file)
-            fieldnames = ['编号', '标题', '链接', '浏览量', '小标题', '正文', '图片']
-            csv_writer = csv.writer(final_file)
-            csv_writer.writerow(fieldnames)
-            for row in csv_reader:
-                number = row['number']
-                title = row['title']
-                url = row['url']
-                viewer = row['viewer']
-                titles, ps, imgs = get_parse_from_number(number)
-                csv_writer.writerow([number, title, url, viewer, titles, ps, imgs])
+    # driver = webdriver.Edge()
+    driver_pool = ThreadPoolExecutor(max_workers=5)
+    drivers = []
+    infos = get_all_notes(url)
+    urls = [info[1] for info in infos]
+    for url in urls:
+        drivers.append(driver_pool.submit(seleium_to_get_html, url))
+    for t in as_completed(drivers):
+        print("page {} done".format(t.result()))
+    driver_pool.shutdown(wait=True)
+
+    print("all complete")
+    # for title, url, viewer in get_all_notes(url):
+    #     driver.get(url)
+    #     for i in range(10):
+    #         driver.execute_script('window.scrollTo(0, document.body.scrollHeight)')
+    #         ActionChains(driver).key_down(Keys.DOWN).perform()
+    #         time.sleep(5)
+    #     html = driver.page_source
+    #     parse_note(html)
+    #     save_html_to_folder(url, html)
+    #     print("页面加载完成")
+
+
