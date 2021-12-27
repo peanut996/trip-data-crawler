@@ -69,7 +69,7 @@ def parse_all_search_page():
 
 def save_note(number: str, url: str):
     print("正在解析游记 {} ， 链接: {} ...".format(number, url))
-    time.sleep(random.randint(3, 10))
+    time.sleep(random.randint(5, 10))
     r = requests.get(url, headers=get_random_header(headers),proxies=get_proxy())
     if "你所在的IP访问频率过高" in r.text:
         print("访问频率过高， 停止")
