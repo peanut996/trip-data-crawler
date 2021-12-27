@@ -74,10 +74,18 @@ def save_fail_html(html: str, number: str):
         file.write(html)
 
 
+def delete_fail_item(number):
+    file_path = "../html/qunar/fail/{}.html".format(number)
+    if os.path.exists(file_path):
+        os.remove(file_path)
+        print("删除失败文件成功: {}".format(number + ".html"))
+
+
 def save_note(number: str, url: str):
     print("正在解析游记 {} ， 链接: {} ...".format(number, url))
     if os.path.exists("../html/qunar/note/{}.html".format(number)):
         print("游记{} 已经存在".format(number))
+        delete_fail_item(number)
         return number
     retry_count = 5
     html = ""
@@ -86,13 +94,15 @@ def save_note(number: str, url: str):
             secs = random.randint(5, 10)
             print("休眠 {} 秒".format(secs))
             time.sleep(secs)
-            r = requests.get(url, headers=headers, proxies=get_proxy())
+            temp_proxy = get_proxy()
+            r = requests.get(url, headers=headers, proxies=get_proxy_dict(temp_proxy))
             if r.status_code != 200 or "你所在的IP访问频率过高" in r.text or "HTTP Status 404" in r.text or "Backend timeout" in r.text:
                 print("访问游记 {} 频率过高，休眠10秒".format(number))
                 save_fail_html(r.text, number)
                 time.sleep(10)
                 raise Exception()
             html = r.text
+            delete_proxy(temp_proxy)
             break
         except Exception:
             retry_count -= 1
@@ -100,6 +110,7 @@ def save_note(number: str, url: str):
     if html == "":
         return number + "失败"
     print("爬取 {} 游记成功".format(number))
+    delete_fail_item(number)
     with open("../html/qunar/note/{}.html".format(number), 'w', encoding='utf-8') as f:
         f.write(html)
     return number

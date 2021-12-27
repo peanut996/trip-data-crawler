@@ -5,11 +5,14 @@ import requests
 proxy_pool_ip = "192.168.2.30"
 
 
-def get_proxy():
-    proxy_from_pool = requests.get("http://{}:5010/get/".format(proxy_pool_ip)).json().get("proxy")
+def get_proxy_dict(proxy: str) -> dict:
     return {
-        'http': 'http://{}'.format(proxy_from_pool),
+        'http': 'http://{}'.format(proxy),
     }
+
+
+def get_proxy():
+    return requests.get("http://{}:5010/get/".format(proxy_pool_ip)).json().get("proxy")
 
 
 def delete_proxy(proxy):
