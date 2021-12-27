@@ -90,7 +90,7 @@ def save_note(number: str, url: str):
         return number
     retry_count = 0
     html = ""
-    while retry_count < 10:
+    while retry_count < 20:
         try:
             print("游记 {} 第{}次尝试".format(number, retry_count+1))
             secs = random.randint(5, 10)
