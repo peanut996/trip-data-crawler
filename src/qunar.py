@@ -15,6 +15,7 @@ proxy = {
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
+    'Cookie': "JSESSIONID=710DBEA4178D29941ED68B8D8BCDF06F; QN1=0000910034fc3c011190013c; qunar-assist={%22version%22:%2220211215173359.925%22%2C%22show%22:false%2C%22audio%22:false%2C%22speed%22:%22middle%22%2C%22zomm%22:1%2C%22cursor%22:false%2C%22pointer%22:false%2C%22bigtext%22:false%2C%22overead%22:false%2C%22readscreen%22:false%2C%22theme%22:%22default%22}; QN205=organic; QN277=organic; csrfToken=2CIcuuvSFBCT2ZAXoJMH5zuv7IzRQvK3; _i=RBTjeRkWfEHxqJowlLfddeucDEex; QN269=D973CAD0670311ECBEFDFA163E3ACAE1; Hm_lvt_c56a2b5278263aa647778d304009eafc=1640602678; fid=2d3cfb3a-0204-451d-8933-f1bc108e7172; viewbook=7716902|7716902|7716902|7716902|7716902; _vi=WAprBYwKuB6otGFFLSyA_u2xWpC_LtPsfoNGTzfd7Fnl9kAVk7gtkk5dvKVEbXyZts2oJsHSO9nyoX4SowP25Ub3Ixj33Coo5jCDxPbacLAQqcHrNacCsEAuJ7j9sRN0hTMp_hp9aCwZrxX60sHm0qh8C7qyBtaiQVUDoXkwl41Y; QN267=09273142896cc8c31f; Hm_lpvt_c56a2b5278263aa647778d304009eafc=1640614739; QN271=8db04eb6-ff9d-4e76-b310-962f0e8804b9"
 }
 QUNAR_URL_TEMPLATE = 'http://travel.qunar.com/travelbook/list/22-shanghai-299878/hot_ctime/{}.htm'
 QUNAR_NOTE_URL_TEMPLATE = "http://travel.qunar.com/travelbook/note/{}"
@@ -68,8 +69,8 @@ def parse_all_search_page():
 
 def save_note(number: str, url: str):
     print("正在解析游记 {} ， 链接: {} ...".format(number, url))
-    time.sleep(random.randint(1, 5))
-    r = requests.get(url, headers=get_random_header(headers),proxies=proxy)
+    time.sleep(random.randint(3, 10))
+    r = requests.get(url, headers=get_random_header(headers),proxies=get_proxy())
     if "你所在的IP访问频率过高" in r.text:
         print("访问频率过高， 停止")
         return number + "失败"
@@ -96,3 +97,4 @@ if __name__ == '__main__':
         print("游记 {} 解析完成".format(number))
 
     print("解析数据完成")
+    # print(get_proxy())
