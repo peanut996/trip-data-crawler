@@ -82,7 +82,7 @@ def delete_fail_item(number):
 
 
 def save_note(number: str, url: str):
-    time.sleep(random.randint(1,3))
+    time.sleep(random.randint(1, 3))
     print("正在解析游记 {} ， 链接: {} ...".format(number, url))
     if os.path.exists("../html/qunar/note/{}.html".format(number)):
         print("游记{} 已经存在".format(number))
