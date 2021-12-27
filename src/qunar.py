@@ -2,6 +2,7 @@ import csv
 import os.path
 import random
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from tool import *
 
 import requests as requests
 import time
@@ -10,8 +11,10 @@ from bs4 import BeautifulSoup
 import lxml
 
 proxy = {
-    'http': "http://proxy.peanut996.cn:9870",
-    'https': "http://proxy.peanut996.cn:9870"
+}
+
+headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
 }
 QUNAR_URL_TEMPLATE = 'http://travel.qunar.com/travelbook/list/22-shanghai-299878/hot_ctime/{}.htm'
 QUNAR_NOTE_URL_TEMPLATE = "http://travel.qunar.com/travelbook/note/{}"
@@ -66,7 +69,7 @@ def parse_all_search_page():
 def save_note(number: str, url: str):
     print("正在解析游记 {} ， 链接: {} ...".format(number, url))
     time.sleep(random.randint(1, 5))
-    r = requests.get(url, proxies=proxy)
+    r = requests.get(url, headers=get_random_header(headers),proxies=proxy)
     if "你所在的IP访问频率过高" in r.text:
         print("访问频率过高， 停止")
         return number + "失败"
