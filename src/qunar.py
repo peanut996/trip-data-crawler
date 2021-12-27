@@ -69,13 +69,28 @@ def parse_all_search_page():
 
 def save_note(number: str, url: str):
     print("正在解析游记 {} ， 链接: {} ...".format(number, url))
-    time.sleep(random.randint(5, 10))
-    r = requests.get(url, headers=get_random_header(headers),proxies=get_proxy())
-    if "你所在的IP访问频率过高" in r.text:
-        print("访问频率过高， 停止")
+    retry_count = 5
+    html = ""
+    while retry_count > 0:
+        try:
+            secs = random.randint(5, 10)
+            print("休眠 {} 秒".format(secs))
+            time.sleep(secs)
+            r = requests.get(url, headers=headers, proxies=get_proxy())
+            if "你所在的IP访问频率过高" in r.text:
+                print("访问频率过高，休眠10秒")
+                time.sleep(10)
+                raise Exception()
+            html = r.text
+            break
+        except Exception:
+            retry_count -= 1
+
+    if html == "":
         return number + "失败"
+    print("爬取 {} 游记成功".format(number))
     with open("../html/qunar/note/{}.html".format(number), 'w', encoding='utf-8') as f:
-        f.write(r.text)
+        f.write(html)
     return number
 
 
