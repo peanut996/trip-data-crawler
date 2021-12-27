@@ -66,6 +66,14 @@ def parse_all_search_page():
     print("解析数据完成")
     return records
 
+
+def save_fail_html(html: str, number: str):
+    if not os.path.exists("../html/qunar/fail"):
+        os.makedirs("../html/qunar/fail")
+    with open("../html/qunar/fail/{}.html".format(number), 'w', encoding='utf-8') as file:
+        file.write(html)
+
+
 def save_note(number: str, url: str):
     print("正在解析游记 {} ， 链接: {} ...".format(number, url))
     if os.path.exists("../html/qunar/note/{}.html".format(number)):
@@ -81,6 +89,7 @@ def save_note(number: str, url: str):
             r = requests.get(url, headers=headers, proxies=get_proxy())
             if r.status_code != 200 or "你所在的IP访问频率过高" in r.text or "HTTP Status 404" in r.text or "Backend timeout" in r.text:
                 print("访问游记 {} 频率过高，休眠10秒".format(number))
+                save_fail_html(r.text, number)
                 time.sleep(10)
                 raise Exception()
             html = r.text
