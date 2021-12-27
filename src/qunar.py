@@ -15,11 +15,11 @@ QUNAR_NOTE_URL_TEMPLATE = "http://travel.qunar.com/travelbook/note/{}"
 def download_all_search_page():
     if not os.path.exists("../html/qunar/search"):
         os.makedirs("../html/qunar/search")
-    for i in range(1, 189):
+    for i in range(1, 190):
         url = QUNAR_URL_TEMPLATE.format(i)
         time.sleep(random.randint(1, 3))
         r = requests.get(url)
-        with open("../html/qunar/search/{}.html".format(i), 'w') as f:
+        with open("../html/qunar/search/{}.html".format(i), 'w', encoding='utf-8') as f:
             f.write(r.text)
         print("page {} done".format(i))
 
