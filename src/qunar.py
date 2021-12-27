@@ -82,11 +82,12 @@ def save_note(number: str, url: str):
 if __name__ == '__main__':
     if not os.path.exists("../html/qunar/note"):
         os.makedirs("../html/qunar/note")
-    pool = ThreadPoolExecutor(max_workers=1)
+    pool = ThreadPoolExecutor(max_workers=5)
     threads = []
-    with open("../csv/qunar/qunar.csv", 'r', encoding='utf-8') as f:
+    with open("../csv/qunar/qunar.csv", 'r', encoding='utf-8', newline='') as f:
         csv_reader = csv.reader(f)
         records = list(csv_reader)
+        records = [r for r in records if len(r) > 0]
         records = records[1:]
         for i in range(len(records)):
             number, url, title = records[i]
