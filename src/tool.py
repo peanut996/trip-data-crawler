@@ -16,7 +16,9 @@ def get_proxy():
 
 
 def delete_proxy(proxy):
-    requests.get("http://{}:5010/delete/?proxy={}".format(proxy_pool_ip, proxy))
+    print("delete proxy: {}".format(proxy))
+    r = requests.get("http://{}:5010/delete/?proxy={}".format(proxy_pool_ip, proxy))
+    print("delete proxy result: {}".format(r.status_code == 200))
 
 
 def get_selenium_edge_option():
