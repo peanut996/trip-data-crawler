@@ -99,10 +99,10 @@ def save_note(number: str, url: str):
             if r.status_code != 200 or "你所在的IP访问频率过高" in r.text or "HTTP Status 404" in r.text or "Backend timeout" in r.text:
                 print("访问游记 {} 频率过高，休眠10秒".format(number))
                 save_fail_html(r.text, number)
+                delete_proxy(temp_proxy)
                 time.sleep(10)
                 raise Exception()
             html = r.text
-            delete_proxy(temp_proxy)
             break
         except Exception:
             retry_count -= 1
