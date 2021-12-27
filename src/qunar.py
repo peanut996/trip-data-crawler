@@ -1,6 +1,7 @@
 import csv
 import os.path
 import random
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import requests as requests
 import time
@@ -8,6 +9,10 @@ from selenium import webdriver
 from bs4 import BeautifulSoup
 import lxml
 
+proxy = {
+    'http': "http://proxy.peanut996.cn:9870",
+    'https': "http://proxy.peanut996.cn:9870"
+}
 QUNAR_URL_TEMPLATE = 'http://travel.qunar.com/travelbook/list/22-shanghai-299878/hot_ctime/{}.htm'
 QUNAR_NOTE_URL_TEMPLATE = "http://travel.qunar.com/travelbook/note/{}"
 
@@ -17,8 +22,12 @@ def download_all_search_page():
         os.makedirs("../html/qunar/search")
     for i in range(1, 190):
         url = QUNAR_URL_TEMPLATE.format(i)
-        time.sleep(random.randint(1, 3))
-        r = requests.get(url)
+        time.sleep(random.randint(5, 10))
+        r = requests.get(url, proxy=proxy)
+        if "你所在的IP访问频率过高" in r.text:
+            print("访问频率过高，休眠5秒")
+            time.sleep(10)
+            r = requests.get(url, proxy=proxy)
         with open("../html/qunar/search/{}.html".format(i), 'w', encoding='utf-8') as f:
             f.write(r.text)
         print("page {} done".format(i))
@@ -31,7 +40,7 @@ def parse_search_page(page_number) -> tuple:
     """
     page_fix = "../html/qunar/search/{}.html".format(page_number)
     html = ""
-    with open(page_fix, 'r',encoding='utf-8') as f:
+    with open(page_fix, 'r', encoding='utf-8') as f:
         html = f.read()
     soup = BeautifulSoup(html, 'lxml')
     list = soup.find('ul', class_='b_strategy_list').find_all('li', class_="list_item")
@@ -54,20 +63,33 @@ def parse_all_search_page():
     return records
 
 
+def save_note(number: str, url: str):
+    print("正在解析游记 {} ， 链接: {} ...".format(number, url))
+    time.sleep(random.randint(1, 5))
+    r = requests.get(url, proxies=proxy)
+    if "你所在的IP访问频率过高" in r.text:
+        print("访问频率过高， 停止")
+        return number + "失败"
+    with open("../html/qunar/note/{}.html".format(number), 'w', encoding='utf-8') as f:
+        f.write(r.text)
+    return number
+
+
 if __name__ == '__main__':
-    records = []
-    for i in range(1, 190):
-        print("正在解析第{}页。。。".format(i + 1))
-        records.append(parse_search_page(i))
+    if not os.path.exists("../html/qunar/note"):
+        os.makedirs("../html/qunar/note")
+    pool = ThreadPoolExecutor(max_workers=1)
+    threads = []
+    with open("../csv/qunar/qunar.csv", 'r', encoding='utf-8') as f:
+        csv_reader = csv.reader(f)
+        records = list(csv_reader)
+        records = records[1:]
+        for i in range(len(records)):
+            number, url, title = records[i]
+            threads.append(pool.submit(save_note, number, url))
+
+    for t in as_completed(threads):
+        number = t.result()
+        print("游记 {} 解析完成".format(number))
 
     print("解析数据完成")
-
-    if not os.path.exists("../csv/qunar"):
-        os.makedirs("../csv/qunar/")
-    with open("../csv/qunar/qunar.csv", 'w', encoding="utf-8") as f:
-        csv_writer = csv.writer(f)
-        csv_writer.writerow(["序号", "链接", "标题"])
-        for record in records:
-            for i in range(len(record[0])):
-                csv_writer.writerow([record[0][i], record[1][i], record[2][i]])
-        print('写入完成')
