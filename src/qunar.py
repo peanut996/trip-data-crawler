@@ -69,6 +69,9 @@ def parse_all_search_page():
 
 def save_note(number: str, url: str):
     print("正在解析游记 {} ， 链接: {} ...".format(number, url))
+    if os.path.exists("../html/qunar/note/{}.html".format(number)):
+        print("游记{} 已经存在".format(number))
+        return number
     retry_count = 5
     html = ""
     while retry_count > 0:
@@ -77,7 +80,7 @@ def save_note(number: str, url: str):
             print("休眠 {} 秒".format(secs))
             time.sleep(secs)
             r = requests.get(url, headers=headers, proxies=get_proxy())
-            if "你所在的IP访问频率过高" in r.text:
+            if r.status_code != 200 or "你所在的IP访问频率过高" in r.text or "HTTP Status 404" in r.text or "Backend timeout" in r.text:
                 print("访问频率过高，休眠10秒")
                 time.sleep(10)
                 raise Exception()
@@ -97,7 +100,7 @@ def save_note(number: str, url: str):
 if __name__ == '__main__':
     if not os.path.exists("../html/qunar/note"):
         os.makedirs("../html/qunar/note")
-    pool = ThreadPoolExecutor(max_workers=5)
+    pool = ThreadPoolExecutor(max_workers=3)
     threads = []
     with open("../csv/qunar/qunar.csv", 'r', encoding='utf-8', newline='') as f:
         csv_reader = csv.reader(f)
