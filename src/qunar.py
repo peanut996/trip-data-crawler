@@ -92,13 +92,13 @@ def save_note(number: str, url: str):
     html = ""
     while retry_count < 20:
         try:
-            print("游记 {} 第{}次尝试".format(number, retry_count+1))
-            secs = random.randint(5, 10)
+            print("游记 {} 第{}次尝试".format(number, retry_count + 1))
+            secs = random.randint(3, 20)
             print("游记 {} 休眠 {} 秒".format(number, secs))
             time.sleep(secs)
             temp_proxy = get_proxy()
             r = requests.get(url, headers=headers, proxies=get_proxy_dict(temp_proxy))
-            if r.status_code != 200 or "你所在的IP访问频率过高" in r.text or "HTTP Status 404" in r.text or "Backend timeout" in r.text:
+            if r.status_code != 200 or is_bad_html(r.text):
                 print("游记 {} 访问频率过高".format(number))
                 save_fail_html(r.text, number)
                 delete_proxy(temp_proxy)
@@ -117,10 +117,15 @@ def save_note(number: str, url: str):
     return number
 
 
+def is_bad_html(html: str) -> bool:
+    return html == '' or "你所在的IP访问频率过高" in html or "HTTP Status 404" in html or "Backend timeout" in html \
+           or "您访问的页面不存在" in html or "cannot find token param" in html
+
+
 if __name__ == '__main__':
     if not os.path.exists("../html/qunar/note"):
         os.makedirs("../html/qunar/note")
-    pool = ThreadPoolExecutor(max_workers=5)
+    pool = ThreadPoolExecutor()
     threads = []
     with open("../csv/qunar/qunar.csv", 'r', encoding='utf-8', newline='') as f:
         csv_reader = csv.reader(f)
