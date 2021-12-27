@@ -87,25 +87,25 @@ def save_note(number: str, url: str):
         print("游记{} 已经存在".format(number))
         delete_fail_item(number)
         return number
-    retry_count = 5
+    retry_count = 0
     html = ""
-    while retry_count > 0:
+    while retry_count < 10:
         try:
+            print("游记 {} 第{}次尝试".format(number, retry_count+1))
             secs = random.randint(5, 10)
             print("休眠 {} 秒".format(secs))
             time.sleep(secs)
             temp_proxy = get_proxy()
             r = requests.get(url, headers=headers, proxies=get_proxy_dict(temp_proxy))
             if r.status_code != 200 or "你所在的IP访问频率过高" in r.text or "HTTP Status 404" in r.text or "Backend timeout" in r.text:
-                print("访问游记 {} 频率过高，休眠10秒".format(number))
+                print("访问游记 {} 频率过高".format(number))
                 save_fail_html(r.text, number)
                 delete_proxy(temp_proxy)
-                time.sleep(10)
                 raise Exception()
             html = r.text
             break
         except Exception:
-            retry_count -= 1
+            retry_count += 1
 
     if html == "":
         return number + "失败"
