@@ -31,7 +31,7 @@ def parse_search_page(page_number) -> tuple:
     """
     page_fix = "../html/qunar/search/{}.html".format(page_number)
     html = ""
-    with open(page_fix, 'r') as f:
+    with open(page_fix, 'r',encoding='utf-8') as f:
         html = f.read()
     soup = BeautifulSoup(html, 'lxml')
     list = soup.find('ul', class_='b_strategy_list').find_all('li', class_="list_item")
@@ -62,10 +62,11 @@ if __name__ == '__main__':
 
     print("解析数据完成")
 
-
-    with open("../csv/qunar/qunar.csv", 'w',encoding="utf-8") as f:
+    if not os.path.exists("../csv/qunar"):
+        os.makedirs("../csv/qunar/")
+    with open("../csv/qunar/qunar.csv", 'w', encoding="utf-8") as f:
         csv_writer = csv.writer(f)
-        csv_writer.writerow(["序号","链接","标题"])
+        csv_writer.writerow(["序号", "链接", "标题"])
         for record in records:
             for i in range(len(record[0])):
                 csv_writer.writerow([record[0][i], record[1][i], record[2][i]])
