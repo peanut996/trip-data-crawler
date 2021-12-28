@@ -97,15 +97,16 @@ def save_note(number: str, url: str):
             print("游记 {} 休眠 {} 秒".format(number, secs))
             time.sleep(secs)
             temp_proxy = get_proxy()
-            r = requests.get(url, headers=headers, proxies=get_proxy_dict(temp_proxy))
+            r = requests.get(url, headers=headers, proxies=get_proxy_dict(temp_proxy), timeout=(3))
             if r.status_code != 200 or is_bad_html(r.text):
                 print("游记 {} 访问频率过高".format(number))
                 save_fail_html(r.text, number)
                 delete_proxy(temp_proxy)
-                raise Exception()
+                raise Exception("访问频率过高")
             html = r.text
             break
-        except Exception:
+        except Exception as e:
+            print("游记 {} 重试, 原因".format(number) + str(e))
             retry_count += 1
 
     if html == "":
@@ -119,7 +120,7 @@ def save_note(number: str, url: str):
 
 def is_bad_html(html: str) -> bool:
     return html == '' or "你所在的IP访问频率过高" in html or "HTTP Status 404" in html or "Backend timeout" in html \
-           or "您访问的页面不存在" in html or "cannot find token param" in html
+           or "您访问的页面不存在" in html or "cannot find token param" in html or "Blocked because of application" in html
 
 
 if __name__ == '__main__':
