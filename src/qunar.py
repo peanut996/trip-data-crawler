@@ -150,9 +150,11 @@ if __name__ == '__main__':
         for row in csv_reader:
             number = row['number']
             url = row['url']
-            title, view_count, subtitles, content, imgs = parse_note_info(read_note_html(number))
-            records.append([number, title, url, view_count, subtitles, content, imgs])
-            print("写入游记 {} 成功".format(number))
+            try:
+                title, view_count, subtitles, content, imgs = parse_note_info(read_note_html(number))
+                records.append([number, title, url, view_count, subtitles, content, imgs])
+            except Exception as e:
+                print("解析游记 {} 失败, 原因: ".format(number) + str(e))
 
     with open("../csv/qunar/qunar_parsed.csv", 'w', encoding='utf-8', newline="") as f:
         csv_writer = csv.writer(f)
