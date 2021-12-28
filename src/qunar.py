@@ -104,6 +104,7 @@ def save_note(number: str, url: str):
                 delete_proxy(temp_proxy)
                 raise Exception()
             html = r.text
+            delete_proxy(temp_proxy)
             break
         except Exception:
             retry_count += 1
@@ -125,7 +126,7 @@ def is_bad_html(html: str) -> bool:
 if __name__ == '__main__':
     if not os.path.exists("../html/qunar/note"):
         os.makedirs("../html/qunar/note")
-    pool = ThreadPoolExecutor()
+    pool = ThreadPoolExecutor(20)
     threads = []
     with open("../csv/qunar/qunar.csv", 'r', encoding='utf-8', newline='') as f:
         csv_reader = csv.reader(f)
