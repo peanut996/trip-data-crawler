@@ -97,7 +97,7 @@ def save_note(number: str, url: str):
             print("游记 {} 休眠 {} 秒".format(number, secs))
             time.sleep(secs)
             temp_proxy = get_proxy()
-            r = requests.get(url, headers=headers, proxies=get_proxy_dict(temp_proxy), timeout=(3))
+            r = requests.get(url, headers=headers, proxies=get_proxy_dict(temp_proxy), timeout=(3.05, 7.05))
             if r.status_code != 200 or is_bad_html(r.text):
                 print("游记 {} 访问频率过高".format(number))
                 save_fail_html(r.text, number)
