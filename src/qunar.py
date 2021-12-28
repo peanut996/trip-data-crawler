@@ -101,13 +101,13 @@ def save_note(number: str, url: str):
             if r.status_code != 200 or is_bad_html(r.text):
                 print("游记 {} 访问频率过高".format(number))
                 save_fail_html(r.text, number)
-                delete_proxy(temp_proxy)
                 raise Exception("访问频率过高")
             html = r.text
             break
         except Exception as e:
-            print("游记 {} 重试, 原因".format(number) + str(e))
+            print("游记 {} 重试, 原因: ".format(number) + str(e))
             retry_count += 1
+            delete_proxy(temp_proxy)
 
     if html == "":
         return number + "失败"
