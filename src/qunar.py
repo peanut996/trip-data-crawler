@@ -123,28 +123,12 @@ def is_bad_html(html: str) -> bool:
            or "您访问的页面不存在" in html or "cannot find token param" in html or "Blocked because of application" in html
 
 
-if __name__ == '__main__':
-    if not os.path.exists("../html/qunar/note"):
-        os.makedirs("../html/qunar/note")
-    pool = ThreadPoolExecutor(32)
-    threads = []
-    with open("../csv/qunar/qunar.csv", 'r', encoding='utf-8', newline='') as f:
-        csv_reader = csv.reader(f)
-        records = list(csv_reader)
-        records = [r for r in records if len(r) > 0]
-        records = records[1:]
-        for i in range(len(records)):
-            number, url, title = records[i]
-            threads.append(pool.submit(save_note, number, url))
+def read_note_html(number: str):
+    with open("../html/qunar/note/{}.html".format(number), 'r', encoding='utf-8') as f:
+        return f.read()
 
-    fail_item = []
-    for t in as_completed(threads):
-        number = t.result()
-        if "失败" in number:
-            fail_item.append(number.replace("失败", ""))
-        print("游记 {} 解析完成".format(number))
-    with open("../csv/qunar/qunar_fail.csv", 'w', encoding='utf-8', newline='') as f:
-        csv_writer = csv.writer(f)
-        csv_writer.writerows(fail_item)
-    print("解析数据完成")
-    # print(get_proxy())
+
+if __name__ == '__main__':
+    html = read_note_html("7716902")
+    soup = BeautifulSoup(html, 'lxml')
+    print(soup)
