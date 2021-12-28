@@ -128,7 +128,34 @@ def read_note_html(number: str):
         return f.read()
 
 
-if __name__ == '__main__':
-    html = read_note_html("7716902")
+def parse_note_info(html: str):
+    """
+    解析页面
+    :param html:
+    :return:
+    """
     soup = BeautifulSoup(html, 'lxml')
-    print(soup)
+    title = soup.find('div', class_='e_title clrfix').h1.span.text
+    view_count = soup.find("span", class_="view_count").text
+    sub_titles = [i.text for i in soup.find_all("div", class_="b_poi_title_box")]
+    content = [i.text for i in soup.find("div", class_="period_ct").find_all("p") if i.text != ""]
+    imgs = [i.dt.img["data-original"] for i in soup.find_all("dl", class_="js_memo_node")]
+    return title, view_count, "".join(sub_titles), "".join(content), "\n".join(imgs)
+
+
+if __name__ == '__main__':
+    records = []
+    with open("../csv/qunar/qunar.csv", 'r', encoding='utf-8') as f:
+        csv_reader = csv.DictReader(f)
+        for row in csv_reader:
+            number = row['number']
+            url = row['url']
+            title, view_count, subtitles, content, imgs = parse_note_info(read_note_html(number))
+            records.append([number, title, url, view_count, subtitles, content, imgs])
+            print("写入游记 {} 成功".format(number))
+
+    with open("../csv/qunar/qunar_parsed.csv", 'w', encoding='utf-8', newline="") as f:
+        csv_writer = csv.writer(f)
+        csv_writer.writerow(["序号", "标题", "链接", "浏览量", "小标题", "内容", "图片"])
+        csv_writer.writerows(records)
+
