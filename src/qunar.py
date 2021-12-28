@@ -101,7 +101,6 @@ def save_note(number: str, url: str):
             if r.status_code != 200 or is_bad_html(r.text):
                 print("游记 {} 访问频率过高".format(number))
                 save_fail_html(r.text, number)
-                delete_proxy(temp_proxy)
                 raise Exception()
             html = r.text
             delete_proxy(temp_proxy)
@@ -126,7 +125,7 @@ def is_bad_html(html: str) -> bool:
 if __name__ == '__main__':
     if not os.path.exists("../html/qunar/note"):
         os.makedirs("../html/qunar/note")
-    pool = ThreadPoolExecutor()
+    pool = ThreadPoolExecutor(32)
     threads = []
     with open("../csv/qunar/qunar.csv", 'r', encoding='utf-8', newline='') as f:
         csv_reader = csv.reader(f)
