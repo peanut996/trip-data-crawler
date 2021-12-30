@@ -60,7 +60,9 @@ def parse_search_page(page_num):
         html = f.read()
         soup = BeautifulSoup(html, 'lxml')
         items = soup.find_all('a', class_='journal-item cf')
-        info = [(get_page_number(i['href']), i.div.find("dt").text, CTRIP_YOU_URL_TEMPLATE.format(i['href'])) for i in
+        info = [(get_page_number(i['href']), i.div.find("dt").text, CTRIP_YOU_URL_TEMPLATE.format(i['href']),
+                 i.find("i", class_="numview").text, i.find("i", class_="want").text,
+                 i.find("i", class_="numreply").text) for i in
                 items]
         return info
 
@@ -79,7 +81,7 @@ def save_parse_search_result_csv():
         os.makedirs("../csv/ctrip")
     with open("../csv/ctrip/search.csv", 'w', encoding='utf-8') as f:
         csv_writer = csv.writer(f)
-        csv_writer.writerow(['page_number', 'title', 'url'])
+        csv_writer.writerow(['page_number', 'title', 'url', "view", "like", "reply"])
         for record in records:
             for r in record:
                 csv_writer.writerow(r)
@@ -92,7 +94,7 @@ def read_all_search_result_from_csv():
     with open("../csv/ctrip/search.csv", 'r', encoding='utf-8') as f:
         csv_reader = csv.DictReader(f)
         for row in csv_reader:
-            records.append((row["page_number"], row["title"], row["url"]))
+            records.append((row["page_number"], row["title"], row["url"],row["view"],row["like"],row["reply"]))
     return records
 
 
@@ -150,5 +152,38 @@ def download_all_note():
         print('note {} downloaded'.format(number))
 
 
+def parse_note_info(page_number, html):
+    soup = BeautifulSoup(html, 'lxml')
+    contents = [i.text for i in soup.find('div', class_='ctd_content').find_all('p')]
+    imgs = [i["data-original"] for i in soup.find_all("img", class_="lary_1")]
+    return page_number, "".join(contents), "\n".join(imgs)
+
+
+def read_note_html(note_number):
+    with open("../html/ctrip/note/success/{}.html".format(note_number), 'r', encoding='utf-8') as f:
+        html = f.read()
+        return html
+
+
+def append_contents_img_to_csv(number):
+    if not os.path.exists("../html/ctrip/note/success/{}.html".format(number)):
+        print("note {} not found".format(number))
+        return
+    return parse_note_info(number, read_note_html(number))
+
+def parse_note_info_to_fina_csv():
+    start = time.time()
+    records = read_all_search_result_from_csv()
+    file_handler = open("../csv/ctrip/final.csv", 'w', encoding='utf-8',newline='')
+    csv_writer = csv.writer(file_handler)
+    csv_writer.writerow(['page_number', 'title', 'url', "view", "like", "reply", "contents", "imgs"])
+    for number, title, url, view, like, reply in records:
+        print("parsing note {}".format(number))
+        _, contents, imgs = append_contents_img_to_csv(number)
+        csv_writer.writerow([number, title, url, view, like, reply, contents, imgs])
+    print("done")
+    print("cost {} seconds".format(time.time() - start))
+
 if __name__ == '__main__':
-    download_all_note()
+
+
