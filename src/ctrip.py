@@ -94,7 +94,7 @@ def read_all_search_result_from_csv():
     with open("../csv/ctrip/search.csv", 'r', encoding='utf-8') as f:
         csv_reader = csv.DictReader(f)
         for row in csv_reader:
-            records.append((row["page_number"], row["title"], row["url"],row["view"],row["like"],row["reply"]))
+            records.append((row["page_number"], row["title"], row["url"], row["view"], row["like"], row["reply"]))
     return records
 
 
@@ -171,19 +171,22 @@ def append_contents_img_to_csv(number):
         return
     return parse_note_info(number, read_note_html(number))
 
+
 def parse_note_info_to_fina_csv():
     start = time.time()
     records = read_all_search_result_from_csv()
-    file_handler = open("../csv/ctrip/final.csv", 'w', encoding='utf-8',newline='')
+    file_handler = open("../csv/ctrip/final.csv", 'w', encoding='utf-8', newline='')
     csv_writer = csv.writer(file_handler)
     csv_writer.writerow(['page_number', 'title', 'url', "view", "like", "reply", "contents", "imgs"])
+    item = 0
     for number, title, url, view, like, reply in records:
-        print("parsing note {}".format(number))
+        item += 1
+        print("processing {} note {}".format(item, number))
         _, contents, imgs = append_contents_img_to_csv(number)
         csv_writer.writerow([number, title, url, view, like, reply, contents, imgs])
     print("done")
     print("cost {} seconds".format(time.time() - start))
 
+
 if __name__ == '__main__':
-
-
+    parse_note_info_to_fina_csv()

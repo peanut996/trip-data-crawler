@@ -2,7 +2,7 @@ import random
 from selenium.webdriver.edge.options import Options as EdgeOptions
 import requests
 
-proxy_pool_ip = "192.168.2.30"
+proxy_pool_ip = "192.168.2.27"
 
 
 def get_proxy_dict(proxy: str) -> dict:
