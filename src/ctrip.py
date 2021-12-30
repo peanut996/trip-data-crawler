@@ -179,11 +179,13 @@ def parse_note_info_to_fina_csv():
     csv_writer = csv.writer(file_handler)
     csv_writer.writerow(['page_number', 'title', 'url', "view", "like", "reply", "contents", "imgs"])
     item = 0
+    rows = []
     for number, title, url, view, like, reply in records:
         item += 1
         print("processing {} note {}".format(item, number))
         _, contents, imgs = append_contents_img_to_csv(number)
-        csv_writer.writerow([number, title, url, view, like, reply, contents, imgs])
+        rows.append([number, title, url, view, like, reply, contents, imgs])
+    csv_writer.writerows(rows)
     print("done")
     print("cost {} seconds".format(time.time() - start))
 
