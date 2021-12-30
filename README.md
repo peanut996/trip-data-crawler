@@ -1,5 +1,11 @@
 # trip-data-crawler
 
+## dependency
+
+```bash
+pip install -r requirements.txt
+```
+
 ## proxy pool
 
 ### redis
