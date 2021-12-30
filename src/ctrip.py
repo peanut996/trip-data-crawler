@@ -141,7 +141,6 @@ def download_all_note():
     workers = []
     records = read_all_search_result_from_csv()
     for number, _, url in records:
-        time.sleep(random.randint(1, 2))
         workers.append(pool.submit(download_note_page, number, url))
 
     for worker in as_completed(workers):
