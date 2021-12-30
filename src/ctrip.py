@@ -1,4 +1,6 @@
 import os.path
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
 import time
 
 from tool import *
@@ -14,9 +16,9 @@ def download_ctrip_search_page(page_num):
     print('downloading page {}...'.format(page_num))
     retry_count = 0
     while retry_count < 20:
-        # proxy = get_proxy()
+        proxy = get_proxy()
         try:
-            time.sleep(random.randint(1, 2))
+            time.sleep(random.randint(1, 10))
             res = requests.get(url, headers=headers, timeout=(3, 7))
             if res.status_code != 200:
                 raise Exception('status code is {}'.format(res.status_code))
@@ -24,10 +26,9 @@ def download_ctrip_search_page(page_num):
             save_search_page(page_num, res.text)
             break
         except Exception as e:
-            # delete_proxy(proxy)
+            delete_proxy(proxy)
             retry_count += 1
-            time.sleep(5)
-            print('download page {} failed, retry count: {}, reason: {}'.format(page_num, retry_count + 1, str(e)))
+            print('download page {} failed, retry count: {}, reason: {}'.format(page_num, retry_count, str(e)))
 
 
 def save_search_page(page_num, html):
@@ -35,11 +36,18 @@ def save_search_page(page_num, html):
     with open("../html/ctrip/search/page{}.html".format(page_num), 'w', encoding='utf-8') as f:
         f.write(html)
 
-
-if __name__ == '__main__':
+def download_all_search_page():
     if not os.path.exists("../html/ctrip/search"):
         os.makedirs("../html/ctrip/search")
-    for i in range(1, 10):
-        download_ctrip_search_page(i)
+    pool = ThreadPoolExecutor(max_workers=32)
+    workers = []
+    for i in range(1, 11):
+        workers.append(pool.submit(download_ctrip_search_page, i))
 
-    print("hello world")
+    for worker in as_completed(workers):
+        number = worker.result()
+        print('page {} downloaded'.format(number))
+
+if __name__ == '__main__':
+    download_all_search_page()
+
