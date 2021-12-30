@@ -121,7 +121,7 @@ def download_note_page(note_number, url):
     while retry_count < 20:
         proxy = get_proxy()
         try:
-            res = requests.get(url, headers=headers, timeout=(3, 7))
+            res = requests.get(url, headers=headers, timeout=(3.05, 7.05))
             if res.status_code != 200:
                 save_fail_note_page(note_number, res.text)
                 raise Exception('status code is {}'.format(res.status_code))
