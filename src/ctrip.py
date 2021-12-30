@@ -137,7 +137,7 @@ def download_note_page(note_number, url):
 
 
 def download_all_note():
-    pool = ThreadPoolExecutor(max_workers=5)
+    pool = ThreadPoolExecutor(max_workers=16)
     workers = []
     records = read_all_search_result_from_csv()
     for number, _, url in records:
