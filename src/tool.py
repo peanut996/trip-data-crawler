@@ -10,7 +10,7 @@ headers = {
 
 
 def format_str(s: str):
-    return s.replace(" ", "").replace("\n", "").replace("\r", "")
+    return s.replace(" ", "").replace("\n", "").replace("\r", "").replace("/","")
 
 
 def get_url_number(url: str):
