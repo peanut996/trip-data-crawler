@@ -4,6 +4,18 @@ import requests
 
 proxy_pool_ip = "192.168.2.27"
 
+headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36 Edg/83.0.478.58'
+}
+
+
+def format_str(s: str):
+    return s.replace(" ", "").replace("\n", "").replace("\r", "")
+
+
+def get_url_number(url: str):
+    return url.split("/")[-1].split(".")[0]
+
 
 def get_proxy_dict(proxy: str) -> dict:
     return {
